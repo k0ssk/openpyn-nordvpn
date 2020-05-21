@@ -134,6 +134,9 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     subprocess.check_call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
     subprocess.check_call("sudo iptables -A OUTPUT -o lo -j ACCEPT".split())
 
+    # allow ICMP traffic
+    subprocess.call("sudo iptables -A INPUT -p icmp --icmp-type any -j ACCEPT".split())
+
     # best practice, stops spoofing
     subprocess.check_call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
 

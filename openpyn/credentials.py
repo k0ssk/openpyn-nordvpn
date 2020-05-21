@@ -6,12 +6,10 @@ import sys
 from typing import List
 
 import verboselogs
-from openpyn import __basefilepath__, root
+from openpyn import credentials_file_path, root
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
-
-credentials_file_path = __basefilepath__ + "credentials"
 
 
 def check_credentials() -> bool:

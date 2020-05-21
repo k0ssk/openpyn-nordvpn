@@ -10,6 +10,7 @@ __basefilepath__ = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 log_format = '%(asctime)s [%(levelname)s] %(message)s'
 log_folder = "/var/log/openpyn"     # logs will be saved here
+credentials_file_path = __basefilepath__ + "credentials"
 
 
 if sys.platform == "linux":

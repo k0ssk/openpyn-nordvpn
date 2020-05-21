@@ -23,7 +23,7 @@ from openpyn import initd
 from openpyn import locations
 from openpyn import root
 from openpyn import systemd
-from openpyn import __basefilepath__, __version__, log_folder, log_format    # variables
+from openpyn import __basefilepath__, __version__, log_folder, log_format, credentials_file_path    # variables
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -181,11 +181,14 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     logger.addHandler(logging.StreamHandler())
 
-    # if log folder doesnt exist, exit, "--init" creates it
-    if not os.path.exists(log_folder):
+    # if vpn credentials file doesnt exist, exit, "--init" creates it
+    if not os.path.exists(credentials_file_path):
         logger.error(
-            "Please initialise first by running 'sudo openpyn --init', then start using 'openpyn' without sudo")
+            "VPN credentials file not found. Please initialise first by running 'sudo openpyn --init', then start using 'openpyn' without sudo")
         return 1
+
+    if not os.path.exists(log_folder):
+        initialise_log_folder(log_folder)
 
     # Add another rotating handler to log to .log files
     # fix permissions if needed
@@ -451,6 +454,11 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 def initialise(log_folder: str) -> bool:
     credentials.save_credentials()
     update_config_files()
+    if not os.path.exists(log_folder):
+        initialise_log_folder(log_folder)
+
+
+def initialise_log_folder(log_folder: str) -> bool:
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
         os.chmod(log_folder, mode=0o777)
