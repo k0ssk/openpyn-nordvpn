@@ -110,6 +110,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
             print("WARNING: empty {}".format(interface))
             continue
 
+
         # allow access to vpn_server_ip
         subprocess.check_call(
             ["sudo", "iptables", "-A", "OUTPUT", "-o", iname,
@@ -147,7 +148,12 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
 
 
 # open sepecified ports for devices in the local network
-def internally_allow_ports(interfaces_details: List, internally_allowed: List, internally_allowed_udp: List) -> None:
+def internally_allow_ports(
+    interfaces_details: List,
+    internally_allowed: List,
+    internally_allowed_udp: List,
+    dhcp_iface: List,
+    ) -> None:
     for interface in interfaces_details:
         # if interface is active with an IP in it, and not "tun*"
         if len(interface) == 3 and "tun" not in interface[0]:
@@ -160,3 +166,10 @@ def internally_allow_ports(interfaces_details: List, internally_allowed: List, i
                 subprocess.call(
                     ("sudo iptables -A INPUT -p udp --dport " + port + " -i " +
                         interface[0] + " -s " + interface[2] + " -j ACCEPT").split())
+            # add a rule to allow inbound traffic including broadcast on UDP port 67
+            # it is needed to grant DHCP leases to clients before they have an IP
+            # assigned via DHCP
+            if dhcp_iface and interface[0] in dhcp_iface:
+                subprocess.check_call(
+                    ("sudo iptables -A INPUT -p udp --dport 67" + " -i " +
+                        interface[0] + " -j ACCEPT").split())

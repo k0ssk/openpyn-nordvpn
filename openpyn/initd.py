@@ -45,6 +45,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('-f', '--force-fw-rules')
     parser.add_argument('--allow', dest='internally_allowed')
     parser.add_argument('--allow-udp', dest='internally_allowed_udp')
+    parser.add_argument('--dhcp-iface', type=str, nargs='+', dest='dhcp_iface')
     # parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
     parser.add_argument('--silent')
     parser.add_argument('--p2p')
@@ -85,6 +86,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     test = args.test
     internally_allowed = args.internally_allowed
     internally_allowed_udp = args.internally_allowed_udp
+    dhcp_iface = args.dhcp_iface
     skip_dns_patch = args.skip_dns_patch
     silent = args.silent
     nvram = args.nvram
@@ -153,6 +155,11 @@ Default(Just Press Enter) is, uk : ") or "uk"
         for port_number in internally_allowed_udp:
             open_ports += " " + port_number
         openpyn_options += " --allow-udp" + open_ports
+    if dhcp_iface:
+        dhcp_ifaces = ''
+        for iface in dhcp_iface:
+            dhcp_ifaces += ' ' + iface
+        openpyn_options += ' --dhcp-iface' + dhcp_ifaces
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
     if silent:
