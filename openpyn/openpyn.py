@@ -106,6 +106,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         conjunction with (-a | --area, and server types (--p2p, --tor) \
         e.g "openpyn -l it --p2p --area milano"')
     parser.add_argument(
+        '--masquerade', help='Create masquerade iptables rule. Needed if your server \
+        acts as a VPN gateway for hosts in an internal network', action='store_true')
+    parser.add_argument(
         '--silent', help='Do not try to send notifications. Use if "libnotify" or "gi"\
         are not available. Automatically used in systemd service file', action='store_true')
     parser.add_argument(
@@ -150,7 +153,7 @@ def main() -> bool:
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
         args.internally_allowed_udp, args.dhcp_iface, args.skip_dns_patch, args.silent, args.nvram,
-        args.openvpn_options, args.location)
+        args.openvpn_options, args.location, args.masquerade)
     return return_code
 
 
@@ -159,7 +162,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, internally_allowed_udp: List, dhcp_iface: List,
-        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float) -> bool:
+        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float,
+        masquerade: bool) -> bool:
 
     if init:
         initialise(log_folder)
@@ -333,6 +337,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += ' --dhcp-iface' + dhcp_ifaces
         if skip_dns_patch:
             openpyn_options += " --skip-dns-patch"
+        if masquerade:
+            openpyn_options += " --masquerade"
         if nvram:
             openpyn_options += " --nvram " + str(nvram)
         if openvpn_options:
@@ -432,7 +438,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 if force_fw_rules:
                     network_interfaces = get_network_interfaces()
                     vpn_server_ip = get_vpn_server_ip(aserver, port)
-                    firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+                    firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch, masquerade)
                     if internally_allowed or internally_allowed_udp or dhcp_iface:
                         firewall.internally_allow_ports(
                             network_interfaces,
@@ -456,7 +462,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         if force_fw_rules:
             network_interfaces = get_network_interfaces()
             vpn_server_ip = get_vpn_server_ip(server, port)
-            firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+            firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch, masquerade)
             if internally_allowed or internally_allowed_udp or dhcp_iface:
                 firewall.internally_allow_ports(
                     network_interfaces,

@@ -73,7 +73,7 @@ def apply_dns_rules():
     # do_dns(None, "0.0.0.0/0", "DROP")
 
 
-def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch: bool) -> None:
+def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch: bool, masquerade: bool) -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
 
     # Empty the INPUT and OUTPUT chain of any current rules
@@ -83,6 +83,16 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     apply_dns_rules()
     logger.notice("Temporarily disabling ipv6 to prevent leakage")
     manage_ipv6(disable=True)
+
+    # Create masquerade rule in NAT table
+    if masquerade:
+        subprocess.check_call([
+            "sudo", "iptables",
+            "-A", "POSTROUTING",
+            "-t", "nat",
+            "-o", "tun+",
+            "-j", "MASQUERADE"
+        ])
 
     # Allow all traffic out over the vpn tunnel
     # except for DNS, which is handled by systemd-resolved script
